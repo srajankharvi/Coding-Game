@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Arena — quiz battles</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Auth -->
+      <section id="auth-view" class="auth-panel">
+        <div class="brand auth-brand">Code <span>Arena</span></div>
+        <p class="auth-lead">Log in or create an account. Scores are stored in this browser only.</p>
+
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" id="tab-login" data-mode="login">Log in</button>
+          <button type="button" class="auth-tab" id="tab-register" data-mode="register">Register</button>
+        </div>
+
+        <form id="form-login" class="auth-form" autocomplete="username">
+          <label class="field-label" for="login-user">Username</label>
+          <input id="login-user" class="field-input" type="text" required minlength="2" maxlength="24" />
+          <label class="field-label" for="login-pass">Password</label>
+          <input id="login-pass" class="field-input" type="password" required minlength="4" autocomplete="current-password" />
+          <p id="auth-msg-login" class="auth-msg hidden" role="alert"></p>
+          <button type="submit" class="primary auth-submit">Log in</button>
+        </form>
+
+        <form id="form-register" class="auth-form hidden" autocomplete="off">
+          <label class="field-label" for="reg-user">Username</label>
+          <input
+            id="reg-user"
+            class="field-input"
+            type="text"
+            required
+            minlength="2"
+            maxlength="24"
+            pattern="[a-zA-Z0-9_]+"
+            title="Letters, numbers, underscore only"
+          />
+          <label class="field-label" for="reg-pass">Password (min 4 characters)</label>
+          <input id="reg-pass" class="field-input" type="password" required minlength="4" autocomplete="new-password" />
+          <p id="auth-msg-register" class="auth-msg hidden" role="alert"></p>
+          <button type="submit" class="primary auth-submit">Create account</button>
+        </form>
+      </section>
+
+      <!-- Main game (after login) -->
+      <div id="game-shell" class="hidden">
+        <header class="top">
+          <div class="top-left">
+            <div class="brand">Code <span>Arena</span></div>
+            <nav class="main-nav" aria-label="Main">
+              <button type="button" class="nav-btn active" id="nav-challenges">Challenges</button>
+              <button type="button" class="nav-btn" id="nav-leaderboard">Leaderboard</button>
+            </nav>
+          </div>
+          <div class="top-right">
+            <div class="stats">
+              <div class="stat level" title="XP from challenges fills the bar and raises your level">
+                <div class="stat-level-row">Level <strong id="stat-level">1</strong></div>
+                <div class="level-bar" id="stat-level-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progress to next level">
+                  <div class="level-bar-fill" id="stat-level-fill"></div>
+                </div>
+                <div class="stat-level-sub" id="stat-level-sub"></div>
+              </div>
+              <div class="stat">Points: <strong id="stat-points">0</strong></div>
+            </div>
+            <div class="user-pill">
+              <span id="session-user" class="user-name"></span>
+              <button type="button" class="btn-ghost" id="btn-logout">Log out</button>
+            </div>
+          </div>
+        </header>
+
+        <main id="list-view">
+          <div id="browse-toolbar" class="browse-toolbar">
+            <button type="button" class="browse-back hidden" id="browse-back-btn" aria-label="Go back">
+              ← Back
+            </button>
+          </div>
+          <h2 id="list-heading">Choose a language</h2>
+          <p id="list-lead" class="list-lead hidden"></p>
+          <div class="challenge-list" id="challenge-list"></div>
+          <footer class="hint">
+            Pick a language, then a level. Correct answers damage the enemy; wrong answers hurt you. The last level in each track is a boss with extra HP. Ctrl+Enter submits.
+          </footer>
+        </main>
+
+        <main id="leaderboard-view" class="hidden">
+          <h2>Leaderboard</h2>
+          <p class="lb-intro">Sorted by player level, then total XP, then points. Same browser = shared local data.</p>
+          <div class="table-wrap">
+            <table class="lb-table" aria-label="Leaderboard">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Player</th>
+                  <th scope="col">Level</th>
+                  <th scope="col">Points</th>
+                  <th scope="col">Solved</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body"></tbody>
+            </table>
+          </div>
+          <p id="leaderboard-empty" class="lb-empty hidden">No players yet. Register an account to appear here.</p>
+        </main>
+
+        <main id="detail-view" class="detail hidden">
+          <button type="button" class="back" id="back-btn">← Back</button>
+          <h1 id="detail-title"></h1>
+          <p class="meta" id="detail-meta"></p>
+
+          <section id="battle-arena" class="battle-arena" aria-label="Battle status">
+            <div class="battle-header">
+              <span id="battle-chapter-label" class="battle-chapter-label"></span>
+              <span id="battle-boss-tag" class="battle-boss-tag hidden">Final boss</span>
+            </div>
+            <div class="battle-row">
+              <div class="combatant hero">
+                <div class="combatant-avatar" aria-hidden="true">🧙</div>
+                <div class="combatant-info">
+                  <span class="combatant-name">You</span>
+                  <div class="hp-bar" role="progressbar" id="hero-hp-bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="Your HP">
+                    <div class="hp-bar-fill hero-fill" id="hero-hp-fill"></div>
+                  </div>
+                  <span class="hp-text" id="hero-hp-text">100 / 100</span>
+                </div>
+              </div>
+              <div class="battle-vs" aria-hidden="true">VS</div>
+              <div class="combatant enemy">
+                <div class="combatant-avatar enemy-avatar" id="enemy-avatar" aria-hidden="true">👾</div>
+                <div class="combatant-info">
+                  <span class="combatant-name" id="enemy-name">Enemy</span>
+                  <div class="hp-bar" role="progressbar" id="enemy-hp-bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="Enemy HP">
+                    <div class="hp-bar-fill enemy-fill" id="enemy-hp-fill"></div>
+                  </div>
+                  <span class="hp-text" id="enemy-hp-text">0 / 0</span>
+                </div>
+              </div>
+            </div>
+            <p id="battle-status" class="battle-status" role="status"></p>
+            <button type="button" class="battle-retry hidden" id="battle-retry-btn">Retry fight</button>
+          </section>
+
+          <div class="prompt" id="detail-prompt"></div>
+          <label class="answer-label" for="answer-input">Your answer</label>
+          <textarea
+            id="answer-input"
+            class="answer"
+            placeholder="Type your answer here..."
+            spellcheck="false"
+          ></textarea>
+          <div class="actions">
+            <button type="button" class="primary" id="submit-btn">Submit answer</button>
+          </div>
+          <div id="feedback" class="feedback hidden" role="status"></div>
+          <div id="feedback-retry-wrap" class="feedback-retry-wrap hidden">
+            <button type="button" class="primary retry-fight-banner" id="feedback-retry-btn">
+              Retry fight — reset HP &amp; enemy
+            </button>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="challenges.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
